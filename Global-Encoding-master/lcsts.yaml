@@ -1,5 +1,5 @@
-data: '/home/linjunyang/data/lcsts/data/'
-logF: 'experiments/lcsts/'
+data: './data/'
+logF: './log/'
 epoch: 20
 batch_size: 64
 optim: 'adam'

@@ -24,7 +24,9 @@ parser = argparse.ArgumentParser(description='train.py')
 opts.model_opts(parser)
 
 opt = parser.parse_args()
+print(opt)
 config = utils.read_config(opt.config)
+print("config = ", config)
 torch.manual_seed(opt.seed)
 opts.convert_to_config(opt, config)
 
