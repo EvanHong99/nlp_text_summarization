@@ -1,0 +1,17 @@
+*.pyc
+__pycache__
+
+SummaRuNNer/checkpoints/*
+!SummaRuNNer/checkpoints/.placeholder
+
+SummaRuNNer/data/*
+!SummaRuNNer/data/.placeholder
+
+SummaRuNNer/outputs/hyp/*
+!SummaRuNNer/outputs/hyp/.placeholder
+
+SummaRuNNer/outputs/ref/*
+!SummaRuNNer/outputs/ref/.placeholder
+
+SummaRuNNer/.DS_Store
+
