@@ -45,6 +45,8 @@ def makeVocabulary(filename, trun_length, filter_length, char, vocab, size):
         for sent in f.readlines():
             if char:
                 tokens = list(sent.strip())
+                print("tokens = ", tokens)
+                assert 0
             else:
                 tokens = sent.strip().split()
             if 0 < filter_length < len(sent.strip().split()):
@@ -163,6 +165,7 @@ def main():
 
     dicts = {}
 
+    # 生成处理后数据的地址
     train_src, train_tgt = opt.load_data + 'train.' + opt.src_suf, opt.load_data + 'train.' + opt.tgt_suf
     valid_src, valid_tgt = opt.load_data + 'valid.' + opt.src_suf, opt.load_data + 'valid.' + opt.tgt_suf
     test_src, test_tgt = opt.load_data + 'test.' + opt.src_suf, opt.load_data + 'test.' + opt.tgt_suf
@@ -173,9 +176,11 @@ def main():
 
     src_dict, tgt_dict = opt.save_data + 'src.dict', opt.save_data + 'tgt.dict'
 
+    # share 表示src和tgt是否共享词表
     if opt.share:
         assert opt.src_vocab_size == opt.tgt_vocab_size
         print('Building source and target vocabulary...')
+        # 构建词表
         dicts['src'] = dicts['tgt'] = utils.Dict([utils.PAD_WORD, utils.UNK_WORD, utils.BOS_WORD, utils.EOS_WORD])
         dicts['src'] = makeVocabulary(train_src, opt.src_trun, opt.src_filter, opt.src_char, dicts['src'], opt.src_vocab_size)
         dicts['src'] = dicts['tgt'] = makeVocabulary(train_tgt, opt.tgt_trun, opt.tgt_filter, opt.tgt_char, dicts['tgt'], opt.tgt_vocab_size)

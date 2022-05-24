@@ -26,12 +26,15 @@ class Dict(object):
         self.frequencies = {}
         self.lower = lower
         # Special entries will not be pruned.
+        # special 用于记录特殊字符，不需要剪枝
         self.special = []
 
         if data is not None:
             if type(data) == str:
+                # 词典文件数据
                 self.loadFile(data)
             else:
+                # 特殊词数据
                 self.addSpecials(data)
 
     def size(self):
@@ -59,6 +62,7 @@ class Dict(object):
             label = idxToLabel[i]
             self.add(label, i)
 
+    # 查询标签
     def lookup(self, key, default=None):
         key = key.lower() if self.lower else key
         try:
@@ -66,6 +70,7 @@ class Dict(object):
         except KeyError:
             return default
 
+    # 查询词
     def getLabel(self, idx, default=None):
         try:
             return self.idxToLabel[idx]
@@ -73,11 +78,13 @@ class Dict(object):
             return default
 
     # Mark this `label` and `idx` as special (i.e. will not be pruned).
+    # 添加特殊字符
     def addSpecial(self, label, idx=None):
         idx = self.add(label, idx)
         self.special += [idx]
 
     # Mark all labels in `labels` as specials (i.e. will not be pruned).
+    # 添加特殊字符
     def addSpecials(self, labels):
         for label in labels:
             self.addSpecial(label)
