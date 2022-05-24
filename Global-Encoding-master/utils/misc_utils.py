@@ -10,7 +10,7 @@ class AttrDict(dict):
 
 
 def read_config(path):
-    print(open(path, 'r'))
+    # print(open(path, 'r'))
     return AttrDict(yaml.safe_load(open(path, 'r')))
 
 

@@ -2447,7 +2447,9 @@ sub wlcs {
       }
     }
   }
-  $$score=wlcsWeightInverse($$hit/$$base,$weightFactor);
+  # CHANGE 
+  # $$score=wlcsWeightInverse($$hit/$$base,$weightFactor);
+  $$score=wlcsWeightInverse($$hit/($$base+1),$weightFactor);
 }
 
 sub wlcsWeight {

@@ -24,9 +24,9 @@ parser = argparse.ArgumentParser(description='train.py')
 opts.model_opts(parser)
 
 opt = parser.parse_args()
-print(opt)
+# print("opt = ", opt)
 config = utils.read_config(opt.config)
-print("config = ", config)
+# print("config = ", config)
 torch.manual_seed(opt.seed)
 opts.convert_to_config(opt, config)
 
@@ -42,13 +42,20 @@ if use_cuda:
 def load_data():
     print('loading data...\n')
     data = pickle.load(open(config.data+'data.pkl', 'rb'))
+    # print("data = ", data)
+
     data['train']['length'] = int(data['train']['length'] * opt.scale)
 
     trainset = utils.BiDataset(data['train'], char=config.char)
     validset = utils.BiDataset(data['valid'], char=config.char)
+    # print("trainset = ", trainset)
+    # print("validset = ", validset)
 
     src_vocab = data['dict']['src']
     tgt_vocab = data['dict']['tgt']
+    # print("src_vocab = ", src_vocab)
+    # print("tgt_vocab = ", tgt_vocab)
+
     config.src_vocab_size = src_vocab.size()
     config.tgt_vocab_size = tgt_vocab.size()
 
@@ -164,7 +171,7 @@ def train_model(model, data, optim, epoch, params):
 
         utils.progress_bar(params['updates'], config.eval_interval)
         params['updates'] += 1
-
+        # print("params = ", params)
         if params['updates'] % config.eval_interval == 0:
             params['log']("epoch: %3d, loss: %6.3f, time: %6.3f, updates: %8d, accuracy: %2.2f\n"
                           % (epoch, params['report_loss'], time.time()-params['report_time'],
@@ -173,6 +180,8 @@ def train_model(model, data, optim, epoch, params):
             score = eval_model(model, data, params)
             for metric in config.metrics:
                 params[metric].append(score[metric])
+                # print("params['rouge'] = ", params['rouge'])
+                # assert 0
                 if score[metric] >= max(params[metric]):
                     with codecs.open(params['log_path']+'best_'+metric+'_prediction.txt','w','utf-8') as f:
                         f.write(codecs.open(params['log_path']+'candidate.txt','r','utf-8').read())
@@ -180,10 +189,8 @@ def train_model(model, data, optim, epoch, params):
             model.train()
             params['report_loss'], params['report_time'] = 0, time.time()
             params['report_correct'], params['report_total'] = 0, 0
-
         if params['updates'] % config.save_interval == 0:
             save_model(params['log_path']+'checkpoint.pt', model, optim, params['updates'])
-
     optim.updateLearningRate(score=0, epoch=epoch)
 
 
@@ -303,6 +310,7 @@ def main():
     params = {'updates': 0, 'report_loss': 0, 'report_total': 0,
               'report_correct': 0, 'report_time': time.time(),
               'log': print_log, 'log_path': log_path}
+
     for metric in config.metrics:
         params[metric] = []
     if opt.restore:
