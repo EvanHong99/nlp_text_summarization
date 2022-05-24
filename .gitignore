@@ -5,6 +5,6 @@ Global-Encoding-master/.DS_Store
 /.DS_Store
 /.ipynb_checkpoints
 */__pycache__/
-./prep_data
-./mini_lcsts
+prep_data/
+mini_lcsts/
 
