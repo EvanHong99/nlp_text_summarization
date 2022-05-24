@@ -1,6 +1,6 @@
 data: './data/'
 logF: './log/'
-epoch: 20
+epoch: 1
 batch_size: 64
 optim: 'adam'
 cell: 'lstm'
@@ -16,7 +16,7 @@ enc_num_layers: 3
 bidirectional: True
 dropout: 0.0
 max_time_step: 50
-eval_interval: 100
+eval_interval: 50
 save_interval: 300
 metrics: ['rouge']
 shared_vocab: True

@@ -223,6 +223,13 @@ def eval_model(model, data, params):
 
         count += len(original_src)
         utils.progress_bar(count, total_count)
+    
+    print("candidate = ", candidate)
+    print("source = ", source)
+    print("reference = ", reference)
+    print("alignment = ", alignment)
+    print("samples = ", samples)
+    assert 0
 
     if config.unk and config.attention != 'None':
         cands = []
@@ -247,9 +254,11 @@ def eval_model(model, data, params):
             f.write(" ".join(candidate[i])+'\n')
 
     score = {}
+    print("config.metricsm = ", config.metrics)
     for metric in config.metrics:
         score[metric] = getattr(utils, metric)(reference, candidate, params['log_path'], params['log'], config)
-
+    print("score = ", score)
+    assert 0
     return score
 
 
@@ -323,6 +332,7 @@ def main():
                 print("Decaying learning rate to %g" % scheduler.get_lr()[0])
             train_model(model, data, optim, i, params)
         for metric in config.metrics:
+            print("params[metric] = ", params[metric])
             print_log("Best %s score: %.2f\n" % (metric, max(params[metric])))
     else:
         score = eval_model(model, data, params)
