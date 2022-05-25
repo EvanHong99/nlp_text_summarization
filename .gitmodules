@@ -1,3 +1,6 @@
 [submodule "word2vec-Chinese"]
 	path = word2vec-Chinese
 	url = https://github.com/lzhenboy/word2vec-Chinese.git
+[submodule "nlp-metrics"]
+	path = nlp-metrics
+	url = https://github.com/hpzhao/nlp-metrics.git
