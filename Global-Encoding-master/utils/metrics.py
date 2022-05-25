@@ -45,9 +45,9 @@ def rouge(reference, candidate, log_path, print_log, config):
 
     for i in range(len(reference)):
         with codecs.open(ref_dir+"%06d_reference.txt" % i, 'w', 'utf-8') as f:
-            f.write(" ".join(reference[i]).replace(' <\s> ', '\n') + '\n')
+            f.write(" ".join(reference[i]).replace(' 3 ', '\n') + '\n')
         with codecs.open(cand_dir+"%06d_candidate.txt" % i, 'w', 'utf-8') as f:
-            f.write(" ".join(candidate[i]).replace(' <\s> ', '\n').replace('<unk>', 'UNK') + '\n')
+            f.write(" ".join(candidate[i]).replace(' 3 ', '\n').replace(' 1 ', 'UNK') + '\n')
 
     r = pyrouge.Rouge155()
     r.model_filename_pattern = '#ID#_reference.txt'

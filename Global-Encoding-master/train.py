@@ -224,12 +224,11 @@ def eval_model(model, data, params):
         count += len(original_src)
         utils.progress_bar(count, total_count)
     
-    print("candidate = ", candidate)
-    print("source = ", source)
-    print("reference = ", reference)
-    print("alignment = ", alignment)
-    print("samples = ", samples)
-    assert 0
+    # print("candidate = ", candidate)
+    # print("source = ", source)
+    # print("reference = ", reference)
+    # print("alignment = ", alignment)
+    # print("samples = ", samples)
 
     if config.unk and config.attention != 'None':
         cands = []
@@ -254,11 +253,21 @@ def eval_model(model, data, params):
             f.write(" ".join(candidate[i])+'\n')
 
     score = {}
-    print("config.metricsm = ", config.metrics)
+    # print("config.metricsm = ", config.metrics)
+
+    print("reference = ", reference)
+    print("candidate", candidate)
+
+    # 将中文分词处理成数字，适配 pyrouge
+    id_reference = [[str(tgt_vocab.lookup(word)) for word in sent]for sent in reference]
+    id_candidate = [[str(tgt_vocab.lookup(word)) for word in sent]for sent in candidate]
+    
+    # print("id_reference = ", id_reference)
+    # print("id_candidate", id_candidate)
+
     for metric in config.metrics:
-        score[metric] = getattr(utils, metric)(reference, candidate, params['log_path'], params['log'], config)
-    print("score = ", score)
-    assert 0
+        score[metric] = getattr(utils, metric)(id_reference, id_candidate, params['log_path'], params['log'], config)
+    # print("score = ", score)
     return score
 
 
@@ -332,8 +341,10 @@ def main():
                 print("Decaying learning rate to %g" % scheduler.get_lr()[0])
             train_model(model, data, optim, i, params)
         for metric in config.metrics:
-            print("params[metric] = ", params[metric])
-            print_log("Best %s score: %.2f\n" % (metric, max(params[metric])))
+            # print("params[metric] = ", params[metric])
+            print_log("Best %s score: " % (metric))
+            print_log("F_measure: %s Recall: %s Precision: %s\n"
+              % (str(max(params[metric])[0]), str(max(params[metric])[1]), str(max(params[metric])[2])))
     else:
         score = eval_model(model, data, params)
 
