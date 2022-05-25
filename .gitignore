@@ -1,7 +1,6 @@
-Global-Encoding-master/venv/
-Global-Encoding-master/data/
-Global-Encoding-master/log/
-Global-Encoding-master/.DS_Store
+Global-Encoding/venv/
+Global-Encoding/data/
+Global-Encoding/log/
 /.DS_Store
 /.ipynb_checkpoints
 */__pycache__/
