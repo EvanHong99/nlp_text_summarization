@@ -2,9 +2,10 @@ Global-Encoding/venv/
 Global-Encoding/data/
 Global-Encoding/log/
 /.DS_Store
-!*/.placeholder
 /.ipynb_checkpoints
 */__pycache__/
 prep_data/
 mini_lcsts/
+
+!*/.placeholder
 
