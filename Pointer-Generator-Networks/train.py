@@ -32,7 +32,7 @@ class Train(object):
         self.end_id = self.vocab.word2id(data.STOP_DECODING)
         self.pad_id = self.vocab.word2id(data.PAD_TOKEN)
         self.unk_id = self.vocab.word2id(data.UNKNOWN_TOKEN)
-        time.sleep(5)
+        print("finish intializing")
 
     def save_model(self, iter):
         save_path = config.save_model_path + "/%07d.tar" % iter
