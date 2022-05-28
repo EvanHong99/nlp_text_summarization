@@ -43,17 +43,23 @@ class Beam(object):
         scores = log_probs + self.scores                                #beam, n_extended_vocab
         scores = scores.view(-1,1)                                      #beam*n_extended_vocab, 1
         best_scores, best_scores_id = T.topk(input=scores, k=config.beam_size, dim=0)   #will be sorted in descending order of scores
-        self.scores = best_scores                                       #(beam,1); sorted
+        self.scores = best_scores    
+        # print("scores.shape = ", scores.shape)                                   #(beam,1); sorted
         beams_order = best_scores_id.squeeze(1)/n_extended_vocab        #(beam,); sorted
+        # print("best_scores_id = ", best_scores_id)
+        # print("n_extended_vocab = ", n_extended_vocab)
         best_words = best_scores_id%n_extended_vocab                    #(beam,1); sorted
-        self.hid_h = h[beams_order]                                     #(beam, n_hid); sorted
-        self.hid_c = c[beams_order]                                     #(beam, n_hid); sorted
-        self.context = context[beams_order]
+        # print("beams_order = ", beams_order)
+        # print("beams_order.long() = ", beams_order.long())
+        # print("h.shape = ", h.shape)
+        self.hid_h = h[beams_order.long()]                                     #(beam, n_hid); sorted
+        self.hid_c = c[beams_order.long()]                                     #(beam, n_hid); sorted
+        self.context = context[beams_order.long()]
         if sum_temporal_srcs is not None:
-            self.sum_temporal_srcs = sum_temporal_srcs[beams_order]     #(beam, n_seq); sorted
+            self.sum_temporal_srcs = sum_temporal_srcs[beams_order.long()]     #(beam, n_seq); sorted
         if prev_s is not None:
-            self.prev_s = prev_s[beams_order]                           #(beam, t, n_hid); sorted
-        self.tokens = self.tokens[beams_order]                          #(beam, t); sorted
+            self.prev_s = prev_s[beams_order.long()]                           #(beam, t, n_hid); sorted
+        self.tokens = self.tokens[beams_order.long()]                          #(beam, t); sorted
         self.tokens = T.cat([self.tokens, best_words], dim=1)           #(beam, t+1); sorted
 
         #End condition is when top-of-beam is EOS.

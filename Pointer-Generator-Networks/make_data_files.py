@@ -14,7 +14,7 @@ chunk_path = "data/chunked"
 vocab_path = "data/vocab"
 VOCAB_SIZE = 200000
 
-CHUNK_SIZE = 1001 # num examples per chunk, for the chunked data
+CHUNK_SIZE = 10001 # num examples per chunk, for the chunked data
 train_bin_path = os.path.join(finished_path, "train.bin")
 valid_bin_path = os.path.join(finished_path, "valid.bin")
 test_bin_path = os.path.join(finished_path, "test.bin")

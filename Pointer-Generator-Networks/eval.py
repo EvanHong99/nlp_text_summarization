@@ -21,10 +21,14 @@ def get_cuda(tensor):
     return tensor
 
 class Evaluate(object):
-    def __init__(self, data_path, opt, batch_size = config.batch_size):
+    def __init__(self, data_path, opt, mode, batch_size = config.batch_size):
         self.vocab = Vocab(config.vocab_path, config.vocab_size)
-        self.batcher = Batcher(data_path, self.vocab, mode='eval',
-                               batch_size=batch_size, single_pass=True)
+        if mode == 'valid':
+            self.batcher = Batcher(data_path, self.vocab, mode='valid',
+                               batch_size=100, single_pass=False)
+        else:
+            self.batcher = Batcher(data_path, self.vocab, mode='test',
+                               batch_size=1000, single_pass=False)
         self.opt = opt
         time.sleep(5)
 
@@ -45,7 +49,6 @@ class Evaluate(object):
                 f.write("dec: " + decoded_sents[i] + "\n\n")
 
     def evaluate_batch(self, print_sents = False):
-
         self.setup_valid()
         batch = self.batcher.next_batch()
         start_id = self.vocab.word2id(data.START_DECODING)
@@ -55,30 +58,29 @@ class Evaluate(object):
         ref_sents = []
         article_sents = []
         rouge = Rouge()
-        while batch is not None:
-            enc_batch, enc_lens, enc_padding_mask, enc_batch_extend_vocab, extra_zeros, ct_e = get_enc_data(batch)
+        # while batch is not None:
+        enc_batch, enc_lens, enc_padding_mask, enc_batch_extend_vocab, extra_zeros, ct_e = get_enc_data(batch)
 
-            with T.autograd.no_grad():
-                enc_batch = self.model.embeds(enc_batch)
-                enc_out, enc_hidden = self.model.encoder(enc_batch, enc_lens)
+        with T.autograd.no_grad():
+            enc_batch = self.model.embeds(enc_batch)
+            enc_out, enc_hidden = self.model.encoder(enc_batch, enc_lens)
 
-            #-----------------------Summarization----------------------------------------------------
-            with T.autograd.no_grad():
-                pred_ids = beam_search(enc_hidden, enc_out, enc_padding_mask, ct_e, extra_zeros, enc_batch_extend_vocab, self.model, start_id, end_id, unk_id)
+        #-----------------------Summarization----------------------------------------------------
+        with T.autograd.no_grad():
+            pred_ids = beam_search(enc_hidden, enc_out, enc_padding_mask, ct_e, extra_zeros, enc_batch_extend_vocab, self.model, start_id, end_id, unk_id)
 
-            for i in range(len(pred_ids)):
-                decoded_words = data.outputids2words(pred_ids[i], self.vocab, batch.art_oovs[i])
-                if len(decoded_words) < 2:
-                    decoded_words = "xxx"
-                else:
-                    decoded_words = " ".join(decoded_words)
-                decoded_sents.append(decoded_words)
-                abstract = batch.original_abstracts[i]
-                article = batch.original_articles[i]
-                ref_sents.append(abstract)
-                article_sents.append(article)
+        for i in range(len(pred_ids)):
+            decoded_words = data.outputids2words(pred_ids[i], self.vocab, batch.art_oovs[i])
+            if len(decoded_words) < 2:
+                decoded_words = "xxx"
+            else:
+                decoded_words = " ".join(decoded_words)
+            decoded_sents.append(decoded_words)
+            abstract = batch.original_abstracts[i]
+            article = batch.original_articles[i]
+            ref_sents.append(abstract)
+            article_sents.append(article)
 
-            batch = self.batcher.next_batch()
 
         load_file = self.opt.load_model
 
@@ -108,8 +110,8 @@ if __name__ == "__main__":
         saved_models = saved_models[file_idx:]
         for f in saved_models:
             opt.load_model = f
-            eval_processor = Evaluate(config.valid_data_path, opt)
+            eval_processor = Evaluate(config.valid_data_path, opt, mode = 'valid')
             eval_processor.evaluate_batch()
     else:   #test
-        eval_processor = Evaluate(config.test_data_path, opt)
+        eval_processor = Evaluate(config.test_data_path, opt, mode = 'test')
         eval_processor.evaluate_batch()

@@ -16,6 +16,9 @@ from torch.distributions import Categorical
 from rouge import Rouge
 from numpy import random
 import argparse
+from beam_search import *
+
+max_score = (0,0,0)
 
 random.seed(123)
 T.manual_seed(123)
@@ -27,15 +30,18 @@ class Train(object):
         self.vocab = Vocab(config.vocab_path, config.vocab_size)
         self.batcher = Batcher(config.train_data_path, self.vocab, mode='train',
                                batch_size=config.batch_size, single_pass=False)
+        self.valid_batcher = Batcher(config.valid_data_path, self.vocab, mode='valid',
+                               batch_size=100, single_pass=False)
         self.opt = opt
         self.start_id = self.vocab.word2id(data.START_DECODING)
         self.end_id = self.vocab.word2id(data.STOP_DECODING)
         self.pad_id = self.vocab.word2id(data.PAD_TOKEN)
         self.unk_id = self.vocab.word2id(data.UNKNOWN_TOKEN)
+        self.max_score = (0,0,0)
         print("finish intializing")
 
-    def save_model(self, iter):
-        save_path = config.save_model_path + "/%07d.tar" % iter
+    def save_model(self, name, iter):
+        save_path = config.save_model_path + "/%s.tar" % name
         T.save({
             "iter": iter + 1,
             "model_dict": self.model.state_dict(),
@@ -56,6 +62,12 @@ class Train(object):
             print("Loaded model at " + load_model_path)
         if self.opt.new_lr is not None:
             self.trainer = T.optim.Adam(self.model.parameters(), lr=self.opt.new_lr)
+        param_count = 0
+        for param in self.model.parameters():
+            param_count += param.view(-1).size()[0]
+        print(repr(self.model) + "\n\n")
+        print('total number of parameters: %d\n\n' % param_count)
+        
         return start_iter
 
     def train_batch_MLE(self, enc_out, enc_hidden, enc_padding_mask, ct_e, extra_zeros, enc_batch_extend_vocab, batch):
@@ -193,10 +205,8 @@ class Train(object):
 
     def train_one_batch(self, batch, iter):
         enc_batch, enc_lens, enc_padding_mask, enc_batch_extend_vocab, extra_zeros, context = get_enc_data(batch)
-
         enc_batch = self.model.embeds(enc_batch)                                                    #Get embeddings for encoder input
         enc_out, enc_hidden = self.model.encoder(enc_batch, enc_lens)
-
         # -------------------------------Summarization-----------------------
         if self.opt.train_mle == "yes":                                                             #perform MLE training
             mle_loss = self.train_batch_MLE(enc_out, enc_hidden, enc_padding_mask, context, extra_zeros, enc_batch_extend_vocab, batch)
@@ -250,9 +260,59 @@ class Train(object):
                 r_avg = r_total / count
                 print("iter:", iter, "mle_loss:", "%.3f" % mle_avg, "reward:", "%.4f" % r_avg)
                 count = mle_total = r_total = 0
+                score = self.evaluate()
+                if self.max_score < score:
+                    self.max_score = score
+                    self.save_model("best", iter)
 
             if iter % 5000 == 0:
-                self.save_model(iter)
+                self.save_model("lastest", iter)
+
+    def evaluate(self):
+
+        batch = self.valid_batcher.next_batch()
+        start_id = self.vocab.word2id(data.START_DECODING)
+        end_id = self.vocab.word2id(data.STOP_DECODING)
+        unk_id = self.vocab.word2id(data.UNKNOWN_TOKEN)
+        decoded_sents = []
+        ref_sents = []
+        article_sents = []
+        rouge = Rouge()
+        # while batch is not None:
+        enc_batch, enc_lens, enc_padding_mask, enc_batch_extend_vocab, extra_zeros, ct_e = get_enc_data(batch)
+
+        with T.autograd.no_grad():
+            enc_batch = self.model.embeds(enc_batch)
+            enc_out, enc_hidden = self.model.encoder(enc_batch, enc_lens)
+
+        #-----------------------Summarization----------------------------------------------------
+        with T.autograd.no_grad():
+            pred_ids = beam_search(enc_hidden, enc_out, enc_padding_mask, ct_e, extra_zeros, enc_batch_extend_vocab, self.model, start_id, end_id, unk_id)
+
+        for i in range(len(pred_ids)):
+            decoded_words = data.outputids2words(pred_ids[i], self.vocab, batch.art_oovs[i])
+            if len(decoded_words) < 2:
+                decoded_words = "xxx"
+            else:
+                decoded_words = " ".join(decoded_words)
+            decoded_sents.append(decoded_words)
+            abstract = batch.original_abstracts[i]
+            article = batch.original_articles[i]
+            ref_sents.append(abstract)
+            article_sents.append(article)
+
+
+        print(batch.original_abstracts)
+        print(decoded_sents)
+
+        scores = rouge.get_scores(decoded_sents, ref_sents, avg = True)
+
+        rouge_1 = scores["rouge-1"]
+        rouge_2 = scores["rouge-2"]
+        rouge_l = scores["rouge-l"]
+        print("rouge_1: %s rouge_2: %s rouge_l: %s\n"
+              % (str(rouge_1), str(rouge_2), str(rouge_l)))
+        return (rouge_1['f'], rouge_2['f'], rouge_l['f'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
