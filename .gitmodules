@@ -4,3 +4,6 @@
 [submodule "nlp-metrics"]
 	path = nlp-metrics
 	url = https://github.com/hpzhao/nlp-metrics.git
+[submodule "SummaRuNNer"]
+	path = SummaRuNNer
+	url = https://github.com/hpzhao/SummaRuNNer.git
