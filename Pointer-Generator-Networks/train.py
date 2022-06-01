@@ -263,7 +263,7 @@ class Train(object):
                 score = self.evaluate()
                 if self.max_score < score:
                     self.max_score = score
-                    self.save_model("best", iter)
+                    self.save_model("best_lr", iter)
 
             if iter % 5000 == 0:
                 self.save_model("lastest", iter)
