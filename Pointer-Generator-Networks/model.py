@@ -170,13 +170,20 @@ class Decoder(nn.Module):
         out = self.V(out)                           # bs,n_hid
         out = self.V1(out)                          # bs, n_vocab
         vocab_dist = F.softmax(out, dim=1)
-        vocab_dist = p_gen * vocab_dist
-        attn_dist_ = (1 - p_gen) * attn_dist
+        # vocab_dist = p_gen * vocab_dist
+        # attn_dist_ = (1 - p_gen) * attn_dist
 
-        # pointer mechanism (as suggested in eq 9 https://arxiv.org/pdf/1704.04368.pdf)
+        # # pointer mechanism (as suggested in eq 9 https://arxiv.org/pdf/1704.04368.pdf)
+        # if extra_zeros is not None:
+        #     vocab_dist = T.cat([vocab_dist, extra_zeros], dim=1)
+        # final_dist = vocab_dist.scatter_add(1, enc_batch_extend_vocab, attn_dist_)
+        
+        vocab_dist = 1 * vocab_dist
+        attn_dist_ = 0 * attn_dist
         if extra_zeros is not None:
             vocab_dist = T.cat([vocab_dist, extra_zeros], dim=1)
         final_dist = vocab_dist.scatter_add(1, enc_batch_extend_vocab, attn_dist_)
+
 
         return final_dist, s_t, ct_e, sum_temporal_srcs, prev_s
 

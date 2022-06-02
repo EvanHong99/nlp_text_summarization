@@ -77,7 +77,7 @@ class Train(object):
         :param enc_out: Outputs of the encoder for all time steps (batch_size, length_input_sequence, 2*hidden_size)
         :param enc_hidden: Tuple containing final hidden state & cell state of encoder. Shape of h & c: (batch_size, hidden_size)
         :param enc_padding_mask: Mask for encoder input; Tensor of size (batch_size, length_input_sequence) with values of 0 for pad tokens & 1 for others
-        :param ct_e: encoder context vector for time_step=0 (eq 5 in https://arxiv.org/pdf/1705.04304.pdf)
+        :param ct_e: encoder context vector for time_step=0
         :param extra_zeros: Tensor used to extend vocab distribution for pointer mechanism
         :param enc_batch_extend_vocab: Input batch that stores OOV ids
         :param batch: batch object
@@ -112,7 +112,7 @@ class Train(object):
         :param enc_out: Outputs of the encoder for all time steps (batch_size, length_input_sequence, 2*hidden_size)
         :param enc_hidden: Tuple containing final hidden state & cell state of encoder. Shape of h & c: (batch_size, hidden_size)
         :param enc_padding_mask: Mask for encoder input; Tensor of size (batch_size, length_input_sequence) with values of 0 for pad tokens & 1 for others
-        :param ct_e: encoder context vector for time_step=0 (eq 5 in https://arxiv.org/pdf/1705.04304.pdf)
+        :param ct_e: encoder context vector for time_step=0
         :param extra_zeros: Tensor used to extend vocab distribution for pointer mechanism
         :param enc_batch_extend_vocab: Input batch that stores OOV ids
         :param article_oovs: Batch containing list of OOVs in each example
@@ -232,6 +232,12 @@ class Train(object):
             rl_loss = get_cuda(T.FloatTensor([0]))
             batch_reward = 0
 
+        if self.opt.train_mle == "no" and self.opt.train_rl == "no":
+            mle_loss = self.train_batch_MLE(enc_out, enc_hidden, enc_padding_mask, context, extra_zeros, enc_batch_extend_vocab, batch)
+            rl_loss = get_cuda(T.FloatTensor([0]))
+            batch_reward = 0
+
+
     # ------------------------------------------------------------------------------------
         self.trainer.zero_grad()
         (self.opt.mle_weight * mle_loss + self.opt.rl_weight * rl_loss).backward()
@@ -263,10 +269,10 @@ class Train(object):
                 score = self.evaluate()
                 if self.max_score < score:
                     self.max_score = score
-                    self.save_model("best_lr", iter)
+                    self.save_model("best_" + self.opt.mode, iter)
 
             if iter % 5000 == 0:
-                self.save_model("lastest", iter)
+                self.save_model("lastest_" + self.opt.mode, iter)
 
     def evaluate(self):
 
@@ -321,6 +327,7 @@ if __name__ == "__main__":
     parser.add_argument('--mle_weight', type=float, default=1.0)
     parser.add_argument('--load_model', type=str, default=None)
     parser.add_argument('--new_lr', type=float, default=None)
+    parser.add_argument('--mode', type=str, default="mle")
     opt = parser.parse_args()
     opt.rl_weight = 1 - opt.mle_weight
     print("Training mle: %s, Training rl: %s, mle weight: %.2f, rl weight: %.2f"%(opt.train_mle, opt.train_rl, opt.mle_weight, opt.rl_weight))
