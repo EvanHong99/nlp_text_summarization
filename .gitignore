@@ -1,3 +1,4 @@
+
 *.pyc
 __pycache__
 
@@ -17,10 +18,19 @@ SummaRuNNer/.DS_Store
 
 pyrouge/
 
+
+Global-Encoding/venv/
+Global-Encoding/data/
+Global-Encoding/log/
+Pointer-Generator-Networks/data/
+
 /.DS_Store
 /.ipynb_checkpoints
 */__pycache__/
 prep_data/
 mini_lcsts/
+
+
+!*/.placeholder
 
 
